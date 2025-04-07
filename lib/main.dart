@@ -83,25 +83,32 @@ class _RegisterEmailSectionState extends State<RegisterEmailSection> {
   String? _userEmail;
 
   void _register() async {
-    try {
-      await widget.auth.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      setState(() {
-       Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(builder: (context) => ProfileScreen()),
-);
+  try {
+    final userCredential = await widget.auth.createUserWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
 
-      });
-    } catch (e) {
-      setState(() {
-        _success = false;
-        _initialState = false;
-      });
-    }
+    setState(() {
+      _success = true;
+      _userEmail = userCredential.user?.email;
+      _initialState = false;
+    });
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+  } catch (e) {
+    setState(() {
+      _success = false;
+      _initialState = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Registration failed: ${e.toString()}')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -179,23 +186,32 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
   String _userEmail = '';
 
   void _signInWithEmailAndPassword() async {
-    try {
-      await widget.auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      setState(() {
-        _success = true;
-        _userEmail = _emailController.text;
-        _initialState = false;
-      });
-    } catch (e) {
-      setState(() {
-        _success = false;
-        _initialState = false;
-      });
-    }
+  try {
+    final userCredential = await widget.auth.signInWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+    setState(() {
+      _success = true;
+      _userEmail = userCredential.user?.email ?? '';
+      _initialState = false;
+    });
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+  } catch (e) {
+    setState(() {
+      _success = false;
+      _initialState = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Sign in failed: ${e.toString()}')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
