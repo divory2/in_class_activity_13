@@ -89,9 +89,11 @@ class _RegisterEmailSectionState extends State<RegisterEmailSection> {
         password: _passwordController.text,
       );
       setState(() {
-        _success = true;
-        _userEmail = _emailController.text;
-        _initialState = false;
+       Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => ProfileScreen()),
+);
+
       });
     } catch (e) {
       setState(() {
@@ -258,3 +260,83 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
     );
   }
 }
+class ProfileScreen extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  Widget build(BuildContext context) {
+    final User? user = _auth.currentUser;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Profile"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              await _auth.signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MyHomePage(title: 'Firebase Auth Demo')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Welcome!", style: TextStyle(fontSize: 20)),
+              SizedBox(height: 10),
+              Text("Email: ${user?.email ?? 'Not logged in'}", style: TextStyle(fontSize: 16)),
+              SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () => _showChangePasswordDialog(context),
+                child: Text("Change Password"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final TextEditingController _newPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Change Password"),
+        content: TextField(
+          controller: _newPasswordController,
+          obscureText: true,
+          decoration: InputDecoration(labelText: "New Password"),
+        ),
+        actions: [
+          TextButton(
+            child: Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text("Update"),
+            onPressed: () async {
+              try {
+                await _auth.currentUser?.updatePassword(_newPasswordController.text);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Password updated successfully")));
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to update password")));
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
